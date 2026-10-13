@@ -78,3 +78,4 @@ Se o login falhar, verifique `DATABASE_URL` no `.env` e se PostgreSQL está roda
 - **Soft delete** em todas as entidades
 - **Auditoria** de ações críticas
 - **Storage abstraction** (LOCAL → Supabase/Railway)
+"# novo-trabalhe-conosco" 
