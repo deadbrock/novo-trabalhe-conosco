@@ -1,0 +1,959 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserType {
+  CANDIDATE
+  STAFF
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEW
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum TalentPoolStatus {
+  PENDING
+  REVIEWED
+  CONVERTED
+  ARCHIVED
+}
+
+enum CmsContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum DocumentOwnerType {
+  CANDIDATE
+  TALENT_POOL
+  APPLICATION
+  APPLICATION_DOCUMENTATION
+  PRE_ADMISSION
+}
+
+enum ApplicationDocumentationStatus {
+  PENDING_UPLOAD
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ApplicationDocumentationItemStatus {
+  PENDING
+  UPLOADED
+  APPROVED
+  REJECTED
+}
+
+enum DocumentSignatureStatus {
+  CREATED
+  SENT
+  DELIVERED
+  SIGNED
+  COMPLETED
+  DECLINED
+  VOIDED
+  ERROR
+}
+
+enum StorageProvider {
+  LOCAL
+  SUPABASE
+  RAILWAY
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  CLOSED
+}
+
+enum JobUrgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum InterviewType {
+  PHONE
+  VIDEO
+  IN_PERSON
+}
+
+enum CommunicationChannel {
+  EMAIL
+  WHATSAPP
+}
+
+enum CommunicationStatus {
+  DRAFT
+  SENT
+  FAILED
+}
+
+enum PreAdmissionStatus {
+  PENDING_DOCS
+  UNDER_REVIEW
+  FORWARDED_TO_DP
+  APPROVED
+  REJECTED
+  HIRED
+}
+
+enum OperationalUnitType {
+  HEADQUARTERS
+  REGIONAL
+}
+
+enum ApplicationOwner {
+  LOCAL
+  HQ_HR
+  DP
+}
+
+enum SlaClockType {
+  RH_DOCUMENTATION
+  DP_ADMISSION
+}
+
+enum SlaClockStatus {
+  RUNNING
+  PAUSED
+  COMPLETED
+}
+
+enum ChecklistItemStatus {
+  PENDING
+  UPLOADED
+  APPROVED
+  REJECTED
+}
+
+enum RaceCategory {
+  BRANCA
+  PRETA
+  PARDA
+  AMARELA
+  INDIGENA
+}
+
+enum CandidateDocumentStatus {
+  PENDING
+  SENT
+  DELIVERED
+  VIEWED
+  SIGNED
+  DECLINED
+  VOIDED
+  ERROR
+}
+
+enum CandidateDocumentType {
+  ETHNIC_DECLARATION
+  LGPD
+  WORK_CONTRACT
+  TRANSPORT_VOUCHER
+  CODE_OF_CONDUCT
+  CONFIDENTIALITY
+  REGISTRATION_FORM
+  TERMS_OF_USE
+}
+
+// ─── RBAC ────────────────────────────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String   @default("")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  permissions RolePermission[]
+  staffProfiles StaffProfile[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id        String   @id @default(uuid())
+  module    String
+  action    String
+  label     String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  roles RolePermission[]
+
+  @@unique([module, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+model User {
+  id                       String     @id @default(uuid())
+  email                    String     @unique
+  passwordHash             String     @map("password_hash")
+  type                     UserType
+  status                   UserStatus @default(PENDING)
+  emailVerified            Boolean    @default(false) @map("email_verified")
+  verificationToken        String?    @map("verification_token")
+  verificationTokenExpires DateTime?  @map("verification_token_expires")
+  createdAt                DateTime   @default(now()) @map("created_at")
+  updatedAt                DateTime   @updatedAt @map("updated_at")
+  deletedAt                DateTime?  @map("deleted_at")
+
+  candidateProfile CandidateProfile?
+  staffProfile     StaffProfile?
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  cmsContents      CmsContent[]      @relation("CmsPublisher")
+  refreshTokens    StaffRefreshToken[]
+  candidateNotes   CandidateNote[]   @relation("CandidateNoteAuthor")
+  interviewsLed    Interview[]       @relation("InterviewInterviewer")
+  interviewsCreated Interview[]      @relation("InterviewCreator")
+  communicationsSent CommunicationLog[] @relation("CommunicationSender")
+  preAdmissionsForwarded PreAdmissionCase[] @relation("PreAdmissionForwarder")
+  checklistItemsReviewed PreAdmissionChecklistItem[] @relation("ChecklistItemReviewer")
+  documentationItemsReviewed ApplicationDocumentationItem[] @relation("DocumentationItemReviewer")
+  signaturesCreated DocumentSignatureRequest[] @relation("SignatureCreator")
+
+  @@map("users")
+}
+
+model CandidateProfile {
+  id             String    @id @default(uuid())
+  userId         String    @unique @map("user_id")
+  name           String
+  phone          String    @default("")
+  cpf            String    @default("")
+  birthDate      DateTime? @map("birth_date")
+  linkedin       String    @default("")
+  street         String    @default("")
+  addressNumber  String    @default("") @map("address_number")
+  complement     String    @default("")
+  neighborhood   String    @default("")
+  zipCode        String    @default("") @map("zip_code")
+  city           String    @default("")
+  state          String    @default("")
+  educationLevel String    @default("") @map("education_level")
+  summary        String    @default("")
+  raceCategory   RaceCategory? @map("race_category")
+  raceDescription String   @default("") @map("race_description")
+  experiences    Json      @default("[]")
+  courses        Json      @default("[]")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+  documents    Document[]      @relation("CandidateDocuments")
+  notes        CandidateNote[]
+  communications CommunicationLog[]
+  candidateDocuments CandidateDocument[]
+
+  @@map("candidate_profiles")
+}
+
+model CandidateNote {
+  id          String    @id @default(uuid())
+  candidateId String    @map("candidate_id")
+  authorId    String    @map("author_id")
+  content     String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  author    User             @relation("CandidateNoteAuthor", fields: [authorId], references: [id])
+
+  @@index([candidateId, createdAt])
+  @@map("candidate_notes")
+}
+
+model OperationalUnit {
+  id             String              @id @default(uuid())
+  name           String
+  slug           String              @unique
+  type           OperationalUnitType @default(REGIONAL)
+  stateCodes     String[]            @default([]) @map("state_codes")
+  isHeadquarters Boolean             @default(false) @map("is_headquarters")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  deletedAt      DateTime?           @map("deleted_at")
+
+  staff        StaffProfile[]
+  jobs         Job[]
+  applications Application[]
+
+  @@map("operational_units")
+}
+
+model StaffProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  roleId        String   @map("role_id")
+  unitId        String?  @map("unit_id")
+  name          String
+  phone         String   @default("")
+  jobTitle      String   @default("") @map("job_title")
+  department    String   @default("")
+  avatarUrl     String   @default("") @map("avatar_url")
+  scopeStates   String[] @default([]) @map("scope_states")
+  scopeCities   String[] @default([]) @map("scope_cities")
+  scopeContracts String[] @default([]) @map("scope_contracts")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id])
+  unit OperationalUnit? @relation(fields: [unitId], references: [id])
+
+  @@map("staff_profiles")
+}
+
+model StaffRefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("staff_refresh_tokens")
+}
+
+// ─── Catalogs ────────────────────────────────────────────────────────────────
+
+model State {
+  id        String   @id @default(uuid())
+  code      String   @unique @db.VarChar(2)
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  cities City[]
+
+  @@map("states")
+}
+
+model City {
+  id        String   @id @default(uuid())
+  stateId   String   @map("state_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  state State @relation(fields: [stateId], references: [id])
+
+  @@unique([stateId, name])
+  @@map("cities")
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  name      String
+  cnpj      String   @default("")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  contracts Contract[]
+  jobs      Job[]
+
+  @@map("clients")
+}
+
+model Contract {
+  id        String   @id @default(uuid())
+  clientId  String   @map("client_id")
+  name      String
+  code      String   @default("")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  client Client @relation(fields: [clientId], references: [id])
+  jobs   Job[]
+
+  @@map("contracts")
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  jobs Job[]
+
+  @@map("departments")
+}
+
+// ─── Jobs (base for MVP phases) ─────────────────────────────────────────────
+
+model Job {
+  id             String     @id @default(uuid())
+  title          String
+  slug           String     @unique
+  description    String     @default("")
+  requirements   String     @default("")
+  benefits       String     @default("")
+  area           String     @default("")
+  locationLabel  String     @default("") @map("location_label")
+  workModality   String     @default("Presencial") @map("work_modality")
+  employmentType String     @default("CLT") @map("employment_type")
+  level          String     @default("")
+  featured       Boolean    @default(false)
+  clientId       String?    @map("client_id")
+  contractId     String?    @map("contract_id")
+  departmentId   String?    @map("department_id")
+  cityId         String?    @map("city_id")
+  stateCode      String     @default("") @map("state_code")
+  workSchedule   String     @default("") @map("work_schedule")
+  urgency        JobUrgency @default(MEDIUM)
+  quantity       Int        @default(1)
+  salaryRange    String     @default("") @map("salary_range")
+  status         JobStatus  @default(DRAFT)
+  publishedAt    DateTime?  @map("published_at")
+  createdById    String?    @map("created_by_id")
+  unitId         String?    @map("unit_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  deletedAt      DateTime?  @map("deleted_at")
+
+  client     Client?     @relation(fields: [clientId], references: [id])
+  contract   Contract?   @relation(fields: [contractId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  unit       OperationalUnit? @relation(fields: [unitId], references: [id])
+  applications Application[]
+
+  @@index([status, deletedAt])
+  @@index([unitId])
+  @@map("jobs")
+}
+
+// ─── Pipeline ────────────────────────────────────────────────────────────────
+
+model PipelineStageConfig {
+  id         String    @id @default(uuid())
+  slug       String    @unique
+  label      String
+  color      String    @default("slate")
+  sortOrder  Int       @map("sort_order")
+  isTerminal Boolean   @default(false) @map("is_terminal")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  @@index([sortOrder])
+  @@map("pipeline_stage_configs")
+}
+
+// ─── Applications & Talent Pool ─────────────────────────────────────────────
+
+model Application {
+  id          String            @id @default(uuid())
+  candidateId String            @map("candidate_id")
+  jobId       String            @map("job_id")
+  unitId      String?           @map("unit_id")
+  status      ApplicationStatus @default(PENDING)
+  source      String            @default("website")
+  score       Float?
+  currentStage String           @default("new") @map("current_stage")
+  currentOwner ApplicationOwner @default(LOCAL) @map("current_owner")
+  returnedReason String         @default("") @map("returned_reason")
+  returnedAt     DateTime?      @map("returned_at")
+  interviewApprovedAt DateTime? @map("interview_approved_at")
+  forwardedToDpAt     DateTime? @map("forwarded_to_dp_at")
+  dpCompletedAt       DateTime? @map("dp_completed_at")
+  rejectionReason String        @default("") @map("rejection_reason")
+  rejectedAt      DateTime?     @map("rejected_at")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  deletedAt   DateTime?         @map("deleted_at")
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id])
+  job       Job              @relation(fields: [jobId], references: [id])
+  unit      OperationalUnit? @relation(fields: [unitId], references: [id])
+  interviews Interview[]
+  communications CommunicationLog[]
+  preAdmission PreAdmissionCase?
+  documentation ApplicationDocumentation?
+  signatureRequests DocumentSignatureRequest[]
+  candidateDocuments CandidateDocument[]
+  slaClocks ApplicationSlaClock[]
+
+  @@index([currentStage, deletedAt])
+  @@index([status, deletedAt])
+  @@index([jobId, deletedAt])
+  @@index([unitId, currentOwner])
+  @@map("applications")
+}
+
+model ApplicationSlaClock {
+  id            String         @id @default(uuid())
+  applicationId String         @map("application_id")
+  type          SlaClockType
+  status        SlaClockStatus @default(RUNNING)
+  startedAt     DateTime       @map("started_at")
+  runningSince  DateTime       @map("running_since")
+  pausedAt      DateTime?      @map("paused_at")
+  completedAt   DateTime?      @map("completed_at")
+  accumulatedMs Int            @default(0) @map("accumulated_ms")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, type])
+  @@index([type, status])
+  @@map("application_sla_clocks")
+}
+
+model TalentPoolEntry {
+  id              String           @id @default(uuid())
+  name            String
+  email           String
+  phone           String           @default("")
+  area            String           @default("")
+  areaLabel       String           @default("") @map("area_label")
+  desiredJob      String           @default("") @map("desired_job")
+  desiredJobSlug  String           @default("") @map("desired_job_slug")
+  linkedin        String           @default("")
+  message         String           @default("")
+  status          TalentPoolStatus @default(PENDING)
+  documentId      String?          @map("document_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  deletedAt       DateTime?        @map("deleted_at")
+
+  document Document? @relation(fields: [documentId], references: [id])
+
+  @@index([email])
+  @@map("talent_pool_entries")
+}
+
+// ─── Documents & Storage ─────────────────────────────────────────────────────
+
+model Document {
+  id           String          @id @default(uuid())
+  ownerType    DocumentOwnerType @map("owner_type")
+  ownerId      String          @map("owner_id")
+  candidateId  String?         @map("candidate_id")
+  type         String          @default("resume")
+  storageKey   String          @map("storage_key")
+  provider     StorageProvider @default(LOCAL)
+  originalName String          @map("original_name")
+  mimeType     String          @map("mime_type")
+  size         Int             @default(0)
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  deletedAt    DateTime?       @map("deleted_at")
+
+  candidate         CandidateProfile? @relation("CandidateDocuments", fields: [candidateId], references: [id])
+  talentPoolEntries TalentPoolEntry[]
+  checklistItem     PreAdmissionChecklistItem?
+  documentationItem ApplicationDocumentationItem?
+  signatureRequest  DocumentSignatureRequest? @relation("SignedDocument")
+
+  @@index([ownerType, ownerId])
+  @@map("documents")
+}
+
+// ─── CMS ─────────────────────────────────────────────────────────────────────
+
+model CmsSection {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  contents CmsContent[]
+
+  @@map("cms_sections")
+}
+
+model CmsContent {
+  id          String           @id @default(uuid())
+  sectionId   String           @map("section_id")
+  version     Int              @default(1)
+  status      CmsContentStatus @default(DRAFT)
+  payload     Json             @default("{}")
+  publishedAt DateTime?        @map("published_at")
+  publishedById String?        @map("published_by_id")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  deletedAt   DateTime?        @map("deleted_at")
+
+  section     CmsSection @relation(fields: [sectionId], references: [id])
+  publishedBy User?      @relation("CmsPublisher", fields: [publishedById], references: [id])
+
+  @@unique([sectionId, version])
+  @@index([sectionId, status])
+  @@map("cms_contents")
+}
+
+// ─── Audit ───────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?  @map("actor_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  metadata   Json     @default("{}")
+  ipAddress  String   @default("") @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Interviews & Communication (Fase 6) ─────────────────────────────────────
+
+model Interview {
+  id              String          @id @default(uuid())
+  applicationId   String          @map("application_id")
+  interviewerId   String?         @map("interviewer_id")
+  scheduledAt     DateTime        @map("scheduled_at")
+  durationMinutes Int             @default(60) @map("duration_minutes")
+  type            InterviewType   @default(VIDEO)
+  location        String          @default("")
+  meetingLink     String          @default("") @map("meeting_link")
+  status          InterviewStatus @default(SCHEDULED)
+  notes           String          @default("")
+  score           Int?
+  feedback        String          @default("")
+  sentToDocumentation Boolean     @default(false) @map("sent_to_documentation")
+  sentToDocumentationAt DateTime? @map("sent_to_documentation_at")
+  createdById     String?         @map("created_by_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  deletedAt       DateTime?       @map("deleted_at")
+
+  application Application @relation(fields: [applicationId], references: [id])
+  interviewer User?       @relation("InterviewInterviewer", fields: [interviewerId], references: [id])
+  createdBy   User?       @relation("InterviewCreator", fields: [createdById], references: [id])
+
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("interviews")
+}
+
+model MessageTemplate {
+  id        String               @id @default(uuid())
+  name      String
+  channel   CommunicationChannel
+  subject   String               @default("")
+  body      String
+  isActive  Boolean              @default(true) @map("is_active")
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
+  deletedAt DateTime?            @map("deleted_at")
+
+  communications CommunicationLog[]
+
+  @@map("message_templates")
+}
+
+model CommunicationLog {
+  id            String               @id @default(uuid())
+  templateId    String?              @map("template_id")
+  applicationId String?              @map("application_id")
+  candidateId   String?              @map("candidate_id")
+  channel       CommunicationChannel
+  recipient     String
+  subject       String               @default("")
+  body          String
+  status        CommunicationStatus  @default(DRAFT)
+  sentAt        DateTime?            @map("sent_at")
+  sentById      String?              @map("sent_by_id")
+  errorMessage  String               @default("") @map("error_message")
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+  deletedAt     DateTime?            @map("deleted_at")
+
+  template    MessageTemplate?  @relation(fields: [templateId], references: [id])
+  application Application?      @relation(fields: [applicationId], references: [id])
+  candidate   CandidateProfile? @relation(fields: [candidateId], references: [id])
+  sentBy      User?             @relation("CommunicationSender", fields: [sentById], references: [id])
+
+  @@index([createdAt])
+  @@index([channel])
+  @@map("communication_logs")
+}
+
+// ─── Pré-admissão & DP (Fase 7) ──────────────────────────────────────────────
+
+model DocumentChecklistTemplate {
+  id          String    @id @default(uuid())
+  name        String
+  description String    @default("")
+  isDefault   Boolean   @default(false) @map("is_default")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  items PreAdmissionChecklistItemTemplate[]
+  cases PreAdmissionCase[]
+  applicationDocumentations ApplicationDocumentation[]
+
+  @@map("document_checklist_templates")
+}
+
+model PreAdmissionChecklistItemTemplate {
+  id          String    @id @default(uuid())
+  templateId  String    @map("template_id")
+  label       String
+  description String    @default("")
+  required    Boolean   @default(true)
+  sortOrder   Int       @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  template DocumentChecklistTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  items    PreAdmissionChecklistItem[]
+  documentationItems ApplicationDocumentationItem[]
+
+  @@index([templateId, sortOrder])
+  @@map("pre_admission_checklist_item_templates")
+}
+
+model PreAdmissionCase {
+  id              String             @id @default(uuid())
+  applicationId   String             @unique @map("application_id")
+  documentationId String?            @unique @map("documentation_id")
+  templateId      String?            @map("template_id")
+  status          PreAdmissionStatus @default(PENDING_DOCS)
+  forwardedToDpAt DateTime?          @map("forwarded_to_dp_at")
+  forwardedById   String?            @map("forwarded_by_id")
+  dpNotes         String             @default("") @map("dp_notes")
+  rejectionReason String             @default("") @map("rejection_reason")
+  rejectedAt      DateTime?          @map("rejected_at")
+  hiredAt         DateTime?          @map("hired_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  deletedAt       DateTime?          @map("deleted_at")
+
+  application Application              @relation(fields: [applicationId], references: [id])
+  documentation ApplicationDocumentation? @relation(fields: [documentationId], references: [id])
+  template    DocumentChecklistTemplate? @relation(fields: [templateId], references: [id])
+  forwardedBy User?                    @relation("PreAdmissionForwarder", fields: [forwardedById], references: [id])
+  items       PreAdmissionChecklistItem[]
+
+  @@index([status])
+  @@map("pre_admission_cases")
+}
+
+model PreAdmissionChecklistItem {
+  id              String              @id @default(uuid())
+  caseId          String              @map("case_id")
+  templateItemId  String?             @map("template_item_id")
+  label           String
+  description     String              @default("")
+  required        Boolean             @default(true)
+  sortOrder       Int                 @map("sort_order")
+  status          ChecklistItemStatus @default(PENDING)
+  rejectionReason String              @default("") @map("rejection_reason")
+  documentId      String?             @unique @map("document_id")
+  reviewedById    String?             @map("reviewed_by_id")
+  reviewedAt      DateTime?           @map("reviewed_at")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  deletedAt       DateTime?           @map("deleted_at")
+
+  case         PreAdmissionCase                   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  templateItem PreAdmissionChecklistItemTemplate? @relation(fields: [templateItemId], references: [id])
+  document     Document?                          @relation(fields: [documentId], references: [id])
+  reviewedBy   User?                              @relation("ChecklistItemReviewer", fields: [reviewedById], references: [id])
+
+  @@index([caseId, sortOrder])
+  @@map("pre_admission_checklist_items")
+}
+
+// ─── Documentação da candidatura (antes da aprovação RH) ─────────────────────
+
+model ApplicationDocumentation {
+  id              String                       @id @default(uuid())
+  applicationId   String                       @unique @map("application_id")
+  templateId      String?                      @map("template_id")
+  status          ApplicationDocumentationStatus @default(PENDING_UPLOAD)
+  rejectionReason String                       @default("") @map("rejection_reason")
+  rejectedAt      DateTime?                    @map("rejected_at")
+  candidateNotifiedAt DateTime?                @map("candidate_notified_at")
+  submittedForReviewAt DateTime?               @map("submitted_for_review_at")
+  hrNotifiedAt    DateTime?                    @map("hr_notified_at")
+  createdAt       DateTime                     @default(now()) @map("created_at")
+  updatedAt       DateTime                     @updatedAt @map("updated_at")
+  deletedAt       DateTime?                    @map("deleted_at")
+
+  application Application              @relation(fields: [applicationId], references: [id])
+  template    DocumentChecklistTemplate? @relation(fields: [templateId], references: [id])
+  items       ApplicationDocumentationItem[]
+  preAdmissionCase PreAdmissionCase?
+
+  @@index([status])
+  @@map("application_documentations")
+}
+
+model ApplicationDocumentationItem {
+  id              String                            @id @default(uuid())
+  documentationId String                            @map("documentation_id")
+  templateItemId  String?                           @map("template_item_id")
+  slug            String                            @default("")
+  label           String
+  description     String                            @default("")
+  required        Boolean                           @default(true)
+  sortOrder       Int                               @map("sort_order")
+  status          ApplicationDocumentationItemStatus @default(PENDING)
+  rejectionReason String                            @default("") @map("rejection_reason")
+  documentId      String?                           @unique @map("document_id")
+  reviewedById    String?                           @map("reviewed_by_id")
+  reviewedAt      DateTime?                         @map("reviewed_at")
+  createdAt       DateTime                          @default(now()) @map("created_at")
+  updatedAt       DateTime                          @updatedAt @map("updated_at")
+  deletedAt       DateTime?                         @map("deleted_at")
+
+  documentation ApplicationDocumentation           @relation(fields: [documentationId], references: [id], onDelete: Cascade)
+  templateItem  PreAdmissionChecklistItemTemplate? @relation(fields: [templateItemId], references: [id])
+  document      Document?                          @relation(fields: [documentId], references: [id])
+  reviewedBy    User?                              @relation("DocumentationItemReviewer", fields: [reviewedById], references: [id])
+  signatureRequest DocumentSignatureRequest?
+
+  @@index([documentationId, sortOrder])
+  @@map("application_documentation_items")
+}
+
+model DocumentSignatureRequest {
+  id                  String                  @id @default(uuid())
+  applicationId       String                  @map("application_id")
+  documentationItemId String?                 @unique @map("documentation_item_id")
+  documentType        String                  @map("document_type")
+  envelopeId          String                  @default("") @map("envelope_id")
+  status              DocumentSignatureStatus @default(CREATED)
+  signerEmail         String                  @map("signer_email")
+  signerName          String                  @map("signer_name")
+  clientUserId        String                  @map("client_user_id")
+  signedDocumentId    String?                 @unique @map("signed_document_id")
+  errorMessage        String                  @default("") @map("error_message")
+  completedAt         DateTime?               @map("completed_at")
+  createdById         String?                 @map("created_by_id")
+  createdAt           DateTime                @default(now()) @map("created_at")
+  updatedAt           DateTime                @updatedAt @map("updated_at")
+  deletedAt           DateTime?               @map("deleted_at")
+
+  application         Application                  @relation(fields: [applicationId], references: [id])
+  documentationItem   ApplicationDocumentationItem? @relation(fields: [documentationItemId], references: [id])
+  signedDocument      Document?                    @relation("SignedDocument", fields: [signedDocumentId], references: [id])
+  createdBy           User?                        @relation("SignatureCreator", fields: [createdById], references: [id])
+
+  @@index([applicationId, documentType])
+  @@index([envelopeId])
+  @@index([status])
+  @@map("document_signature_requests")
+}
+
+model CandidateDocument {
+  id                 String                  @id @default(uuid())
+  candidateId        String                  @map("candidate_id")
+  applicationId      String?                 @map("application_id")
+  documentType       CandidateDocumentType   @map("document_type")
+  provider           String                  @default("docusign")
+  providerDocumentId String                  @default("") @map("provider_document_id")
+  providerEnvelopeId String                  @default("") @map("provider_envelope_id")
+  status             CandidateDocumentStatus @default(PENDING)
+  signedPdfPath      String                  @default("") @map("signed_pdf_path")
+  certificatePdfPath String                  @default("") @map("certificate_pdf_path")
+  signedAt           DateTime?               @map("signed_at")
+  raceCategory       RaceCategory?           @map("race_category")
+  raceDescription    String                  @default("") @map("race_description")
+  createdAt          DateTime                @default(now()) @map("created_at")
+  updatedAt          DateTime                @updatedAt @map("updated_at")
+  deletedAt          DateTime?               @map("deleted_at")
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id])
+  application Application?   @relation(fields: [applicationId], references: [id])
+  events      DocumentEvent[]
+
+  @@index([candidateId, documentType])
+  @@index([providerEnvelopeId])
+  @@index([status])
+  @@map("candidate_documents")
+}
+
+model DocumentEvent {
+  id         String   @id @default(uuid())
+  documentId String   @map("document_id")
+  event      String
+  payload    Json     @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  document CandidateDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, createdAt])
+  @@map("document_events")
+}

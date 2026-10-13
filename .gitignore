@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.env
+.env.local
+
+# Uploads
+packages/api/uploads/
+server/data/uploads/
+
+# Legacy JSON (migrado para PostgreSQL)
+server/data/users.json
+server/data/applications.json
+server/data/talent-pool.json
+
+# Prisma
+packages/api/prisma/migrations/**/migration_lock.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Package managers
+package-lock.json
+ 

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://carreiras.fgservices.com.br/sitemap.xml

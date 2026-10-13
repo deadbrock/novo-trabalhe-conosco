@@ -1,0 +1,34 @@
+{
+  "name": "fg-careers",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm run dev:all",
+    "dev:website": "pnpm --filter @fg/website dev",
+    "dev:admin": "pnpm --filter @fg/admin dev",
+    "dev:api": "pnpm --filter @fg/api dev",
+    "dev:all": "concurrently -n website,admin,api -c blue,magenta,green \"pnpm run dev:website\" \"pnpm run dev:admin\" \"pnpm run dev:api\"",
+    "dev:all:host": "concurrently -n website,admin,api -c blue,magenta,green \"pnpm --filter @fg/website dev:host\" \"pnpm --filter @fg/admin dev:host\" \"pnpm run dev:api\"",
+    "build": "pnpm -r build",
+    "build:website": "pnpm --filter @fg/website build",
+    "build:admin": "pnpm --filter @fg/admin build",
+    "lint": "pnpm -r lint",
+    "db:generate": "node scripts/db-generate.mjs",
+    "db:migrate": "pnpm --filter @fg/api db:migrate",
+    "db:migrate:dev": "pnpm --filter @fg/api db:migrate:dev",
+    "db:seed": "pnpm --filter @fg/api db:seed",
+    "db:seed:cms": "pnpm --filter @fg/api db:seed:cms",
+    "db:studio": "pnpm --filter @fg/api db:studio",
+    "db:reset": "pnpm --filter @fg/api db:reset",
+    "setup:db": "node scripts/setup-db.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.15.4"
+}

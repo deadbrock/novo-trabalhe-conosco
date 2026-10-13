@@ -1,0 +1,36 @@
+{"timestamp":"2026-07-29T17:48:58.834Z","type":"request","action":"void_envelope","envelopeId":"77c22744-1d44-8ef9-8026-867cbc791ba5"}
+{"timestamp":"2026-07-29T17:48:58.838Z","type":"request","action":"jwt_token"}
+{"timestamp":"2026-07-29T17:48:59.960Z","type":"response","action":"jwt_token","expiresIn":3600}
+{"timestamp":"2026-07-29T17:49:03.320Z","type":"response","action":"void_envelope","envelopeId":"77c22744-1d44-8ef9-8026-867cbc791ba5","status":"voided"}
+{"timestamp":"2026-07-29T17:49:04.577Z","type":"request","action":"create_envelope","documentName":"Autodeclaração Étnico-Racial","templateId":null}
+{"timestamp":"2026-07-29T17:49:06.927Z","type":"response","action":"create_envelope","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f"}
+{"timestamp":"2026-07-29T17:49:08.586Z","type":"request","action":"embedded_signing_url","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f"}
+{"timestamp":"2026-07-29T17:49:09.382Z","type":"response","action":"embedded_signing_url","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f"}
+{"timestamp":"2026-07-29T17:49:11.797Z","type":"request","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T17:49:12.421Z","type":"response","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","recipientSigned":false,"matchedRecipientStatus":"sent"}
+{"timestamp":"2026-07-29T17:49:51.289Z","type":"request","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T17:49:52.497Z","type":"response","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","recipientSigned":false,"matchedRecipientStatus":"delivered"}
+{"timestamp":"2026-07-29T17:50:31.641Z","type":"request","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T17:50:32.974Z","type":"response","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","recipientSigned":false,"matchedRecipientStatus":"delivered"}
+{"timestamp":"2026-07-29T17:51:11.651Z","type":"request","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T17:51:13.812Z","type":"response","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","recipientSigned":false,"matchedRecipientStatus":"delivered"}
+{"timestamp":"2026-07-29T17:51:51.633Z","type":"request","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T17:51:52.899Z","type":"response","action":"recipient_status","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","recipientSigned":false,"matchedRecipientStatus":"delivered"}
+{"timestamp":"2026-07-29T17:59:08.547Z","type":"request","action":"void_envelope","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f"}
+{"timestamp":"2026-07-29T17:59:08.554Z","type":"request","action":"jwt_token"}
+{"timestamp":"2026-07-29T17:59:09.704Z","type":"response","action":"jwt_token","expiresIn":3600}
+{"timestamp":"2026-07-29T17:59:11.950Z","type":"response","action":"void_envelope","envelopeId":"12582125-6489-85f9-813e-3561c3701d9f","status":"voided"}
+{"timestamp":"2026-07-29T17:59:13.095Z","type":"request","action":"create_envelope","documentName":"Autodeclaração Étnico-Racial","templateId":null}
+{"timestamp":"2026-07-29T17:59:15.190Z","type":"response","action":"create_envelope","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1"}
+{"timestamp":"2026-07-29T17:59:16.816Z","type":"request","action":"embedded_signing_url","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1"}
+{"timestamp":"2026-07-29T17:59:17.564Z","type":"response","action":"embedded_signing_url","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1"}
+{"timestamp":"2026-07-29T17:59:19.569Z","type":"request","action":"recipient_status","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T17:59:20.118Z","type":"response","action":"recipient_status","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","recipientSigned":false,"matchedRecipientStatus":"sent"}
+{"timestamp":"2026-07-29T17:59:59.717Z","type":"request","action":"recipient_status","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T18:00:01.017Z","type":"response","action":"recipient_status","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","recipientSigned":false,"matchedRecipientStatus":"delivered"}
+{"timestamp":"2026-07-29T18:00:34.659Z","type":"request","action":"recipient_status","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","clientUserId":"5021e42d-c7c1-4956-8dc1-932562185324","email":"aux.admfgservices@gmail.com"}
+{"timestamp":"2026-07-29T18:00:36.155Z","type":"response","action":"recipient_status","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","recipientSigned":true,"matchedRecipientStatus":"completed"}
+{"timestamp":"2026-07-29T18:00:36.160Z","type":"request","action":"download_signed_pdf","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","documentId":"combined"}
+{"timestamp":"2026-07-29T18:00:37.986Z","type":"response","action":"download_signed_pdf","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","documentId":"combined","size":120306}
+{"timestamp":"2026-07-29T18:00:37.993Z","type":"request","action":"download_certificate","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","documentId":"certificate"}
+{"timestamp":"2026-07-29T18:00:40.121Z","type":"response","action":"download_certificate","envelopeId":"72be2816-07b4-80fd-8054-04b4c2751dd1","documentId":"certificate","size":236862}

@@ -1,0 +1,38 @@
+{
+  "name": "@fg/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/prisma-generate-safe.mjs && dotenv -e ../../.env -- node --watch src/index.js",
+    "start": "node src/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "dotenv -e ../../.env -- prisma migrate deploy",
+    "db:migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
+    "db:seed": "dotenv -e ../../.env -- node prisma/seed.js",
+    "db:seed:cms": "dotenv -e ../../.env -- node scripts/seed-cms.mjs",
+    "db:studio": "dotenv -e ../../.env -- prisma studio",
+    "db:reset": "dotenv -e ../../.env -- prisma migrate reset --force"
+  },
+  "dependencies": {
+    "@fg/contracts": "workspace:*",
+    "@prisma/client": "^6.19.2",
+    "@sendgrid/mail": "^8.1.6",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "docusign-esign": "^10.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "pdf-lib": "^1.17.1",
+    "uuid": "^14.0.1"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^8.0.0",
+    "prisma": "^6.19.2"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}
